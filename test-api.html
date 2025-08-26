@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 20px; border: 1px solid #ccc; }
+        button { padding: 10px 20px; margin: 5px; }
+        input, textarea { width: 100%; padding: 8px; margin: 5px 0; }
+        .result { background: #f5f5f5; padding: 10px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>API Test Page</h1>
+    
+    <div class="test-section">
+        <h2>1. Тест получения событий</h2>
+        <button onclick="testGetEvents()">Получить события</button>
+        <div id="getEventsResult" class="result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. Тест создания события</h2>
+        <input type="text" id="eventTitle" placeholder="Название события" value="Тестовое событие">
+        <input type="text" id="eventAddress" placeholder="Адрес" value="Тестовый адрес">
+        <input type="date" id="eventDate" value="2025-01-20">
+        <input type="time" id="eventTime" value="20:00">
+        <input type="text" id="eventTags" placeholder="Теги" value="тест, событие">
+        <input type="number" id="eventMax" placeholder="Максимум участников" value="10">
+        <button onclick="testCreateEvent()">Создать событие</button>
+        <div id="createEventResult" class="result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. Тест регистрации пользователя</h2>
+        <input type="email" id="userEmail" placeholder="Email" value="test@example.com">
+        <input type="password" id="userPassword" placeholder="Пароль" value="password123">
+        <input type="text" id="userName" placeholder="Имя" value="Тестовый пользователь">
+        <button onclick="testRegisterUser()">Зарегистрировать пользователя</button>
+        <div id="registerResult" class="result"></div>
+    </div>
+
+    <script>
+        function logResult(elementId, data) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+        }
+
+        function testGetEvents() {
+            console.log('Testing GET /api/events');
+            fetch('/api/events')
+                .then(response => {
+                    console.log('Response status:', response.status);
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Response data:', data);
+                    logResult('getEventsResult', data);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    logResult('getEventsResult', { error: error.message });
+                });
+        }
+
+        function testCreateEvent() {
+            const eventData = {
+                title: document.getElementById('eventTitle').value,
+                address: document.getElementById('eventAddress').value,
+                startTime: document.getElementById('eventDate').value + 'T' + document.getElementById('eventTime').value + ':00Z',
+                tags: document.getElementById('eventTags').value.split(',').map(t => t.trim()).filter(Boolean),
+                maxParticipants: Number(document.getElementById('eventMax').value)
+            };
+
+            console.log('Testing POST /api/events');
+            console.log('Event data:', eventData);
+
+            fetch('/api/events?creatorId=1', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(eventData)
+            })
+            .then(response => {
+                console.log('Response status:', response.status);
+                return response.json();
+            })
+            .then(data => {
+                console.log('Response data:', data);
+                logResult('createEventResult', data);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                logResult('createEventResult', { error: error.message });
+            });
+        }
+
+        function testRegisterUser() {
+            const userData = {
+                email: document.getElementById('userEmail').value,
+                password: document.getElementById('userPassword').value,
+                name: document.getElementById('userName').value
+            };
+
+            console.log('Testing POST /api/users/register');
+            console.log('User data:', userData);
+
+            fetch('/api/users/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(userData)
+            })
+            .then(response => {
+                console.log('Response status:', response.status);
+                return response.json();
+            })
+            .then(data => {
+                console.log('Response data:', data);
+                logResult('registerResult', data);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                logResult('registerResult', { error: error.message });
+            });
+        }
+
+        // Auto-test on page load
+        window.addEventListener('load', () => {
+            console.log('Page loaded, running auto-tests...');
+            setTimeout(() => {
+                testGetEvents();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
+
